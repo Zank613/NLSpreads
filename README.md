@@ -22,12 +22,12 @@ Create and manage simple table data with commands like
 
 ## Roadmap
 
-- [] Save and load `.csv`
-- [] Save and load `.json`
-- [] Save and load `.xlsx`
-- [] Arithmetic operations on cells
-- [] Individual cell editing with `set Row1 Column1 "Data"`
-- [] More visualization options
+- [ ] Save and load `.csv`
+- [ ] Save and load `.json`
+- [ ] Save and load `.xlsx`
+- [ ] Arithmetic operations on cells
+- [ ] Individual cell editing with `set Row1 Column1 "Data"`
+- [ ] More visualization options
 
 ## License
 
