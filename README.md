@@ -1,5 +1,5 @@
 # NLSpreads
-A natural language style CLI spreadsheet made in [SpectreConsole](https://github.com/spectreconsole/spectre.console) and C#.
+A natural language style CLI spreadsheet made in [Spectre.Console](https://github.com/spectreconsole/spectre.console) and C#.
 
 ## Important
 > [!WARNING]
