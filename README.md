@@ -20,6 +20,15 @@ Create and manage simple table data with commands like
 - Add/delete rows and columns
 - Switch/delete tables
 
+## Roadmap
+
+- [] Save and load `.csv`
+- [] Save and load `.json`
+- [] Save and load `.xlsx`
+- [] Arithmetic operations on cells
+- [] Individual cell editing with `set Row1 Column1 "Data"`
+- [] More visualization options
+
 ## License
 
 This project is licensed under MIT License. See `LICENSE` file.
