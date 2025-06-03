@@ -26,8 +26,6 @@ namespace NLSpreads
             if (!Columns.Contains(columnName))
             {
                 Columns.Add(columnName);
-
-                // For each existing row, append an empty cell
                 foreach (var rowName in Rows.Keys.ToList())
                 {
                     Rows[rowName].Add(string.Empty);
@@ -41,8 +39,6 @@ namespace NLSpreads
             if (idx >= 0)
             {
                 Columns.RemoveAt(idx);
-
-                // Remove that index from every row's value list
                 foreach (var rowName in Rows.Keys.ToList())
                 {
                     var values = Rows[rowName];
@@ -63,7 +59,6 @@ namespace NLSpreads
         {
             if (!Rows.ContainsKey(rowName))
             {
-                // Initialize with as many empty cells as there are columns
                 Rows[rowName] = Columns.Select(c => string.Empty).ToList();
             }
         }
@@ -73,8 +68,6 @@ namespace NLSpreads
             if (Rows.ContainsKey(rowName))
             {
                 var newCells = new List<string>();
-
-                // For each column, take the corresponding value or "", if not provided
                 for (int i = 0; i < Columns.Count; i++)
                 {
                     if (i < values.Count)
@@ -86,7 +79,6 @@ namespace NLSpreads
                         newCells.Add(string.Empty);
                     }
                 }
-
                 Rows[rowName] = newCells;
             }
         }
@@ -96,6 +88,29 @@ namespace NLSpreads
             if (Rows.ContainsKey(rowName))
             {
                 Rows.Remove(rowName);
+            }
+        }
+
+        public void FillColumn(string columnName, List<string> values)
+        {
+            int idx = Columns.IndexOf(columnName);
+            if (idx < 0) return;
+            var rowNames = Rows.Keys.ToList();
+            for (int i = 0; i < rowNames.Count; i++)
+            {
+                var rowName = rowNames[i];
+                var rowValues = Rows[rowName];
+                string val = i < values.Count ? values[i] : string.Empty;
+                if (idx < rowValues.Count)
+                {
+                    rowValues[idx] = val;
+                }
+                else
+                {
+                    while (rowValues.Count < Columns.Count)
+                        rowValues.Add(string.Empty);
+                    rowValues[idx] = val;
+                }
             }
         }
     }

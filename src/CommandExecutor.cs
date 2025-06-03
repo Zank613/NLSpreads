@@ -46,6 +46,10 @@ namespace NLSpreads
                     ExecuteFillRow(frc, state);
                     break;
 
+                case FillColumnCommand fcc:
+                    ExecuteFillColumn(fcc, state);
+                    break;
+
                 default:
                     AnsiConsole.MarkupLine("[red]Unknown command type[/]");
                     break;
@@ -64,15 +68,13 @@ namespace NLSpreads
             {
                 state.SwitchTable(cmd.TableName);
                 AnsiConsole.MarkupLine(
-                    $"[yellow]Table '[u]{cmd.TableName}[/]' already exists. Switched to it.[/]"
-                );
+                    $"[yellow]Table '[u]{cmd.TableName}[/]' already exists. Switched to it.[/]");
             }
             else
             {
                 state.CreateTable(cmd.TableName);
                 AnsiConsole.MarkupLine(
-                    $"[green]Created table '[u]{cmd.TableName}[/]' and set as active.[/]"
-                );
+                    $"[green]Created table '[u]{cmd.TableName}[/]' and set as active.[/]");
             }
         }
 
@@ -87,15 +89,13 @@ namespace NLSpreads
             if (!state.HasTable(cmd.TableName))
             {
                 AnsiConsole.MarkupLine(
-                    $"[red]Table '[u]{cmd.TableName}[/]' does not exist.[/]"
-                );
+                    $"[red]Table '[u]{cmd.TableName}[/]' does not exist.[/]");
                 return;
             }
 
             state.DeleteTable(cmd.TableName);
             AnsiConsole.MarkupLine(
-                $"[green]Deleted table '[u]{cmd.TableName}[/]'.[/]"
-            );
+                $"[green]Deleted table '[u]{cmd.TableName}[/]'.[/]");
         }
 
         private static void ExecuteSwitchTable(SwitchTableCommand cmd, SpreadsheetState state)
@@ -109,15 +109,13 @@ namespace NLSpreads
             if (!state.HasTable(cmd.TableName))
             {
                 AnsiConsole.MarkupLine(
-                    $"[red]Table '[u]{cmd.TableName}[/]' does not exist.[/]"
-                );
+                    $"[red]Table '[u]{cmd.TableName}[/]' does not exist.[/]");
                 return;
             }
 
             state.SwitchTable(cmd.TableName);
             AnsiConsole.MarkupLine(
-                $"[green]Switched to table '[u]{cmd.TableName}[/]'.[/]"
-            );
+                $"[green]Switched to table '[u]{cmd.TableName}[/]'.[/]");
         }
 
         private static void ExecuteAddRows(AddRowsCommand cmd, SpreadsheetState state)
@@ -134,15 +132,13 @@ namespace NLSpreads
                 if (table.HasRow(rowName))
                 {
                     AnsiConsole.MarkupLine(
-                        $"[yellow]Row '[u]{rowName}[/]' already exists in table '[u]{table.Name}[/]'.[/]"
-                    );
+                        $"[yellow]Row '[u]{rowName}[/]' already exists in table '[u]{table.Name}[/]'.[/]");
                 }
                 else
                 {
                     table.AddRow(rowName);
                     AnsiConsole.MarkupLine(
-                        $"[green]Added row '[u]{rowName}[/]' to table '[u]{table.Name}[/]'.[/]"
-                    );
+                        $"[green]Added row '[u]{rowName}[/]' to table '[u]{table.Name}[/]'.[/]");
                 }
             }
         }
@@ -161,15 +157,13 @@ namespace NLSpreads
                 if (!table.HasRow(rowName))
                 {
                     AnsiConsole.MarkupLine(
-                        $"[yellow]Row '[u]{rowName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]"
-                    );
+                        $"[yellow]Row '[u]{rowName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]");
                 }
                 else
                 {
                     table.DeleteRow(rowName);
                     AnsiConsole.MarkupLine(
-                        $"[green]Deleted row '[u]{rowName}[/]' from table '[u]{table.Name}[/]'.[/]"
-                    );
+                        $"[green]Deleted row '[u]{rowName}[/]' from table '[u]{table.Name}[/]'.[/]");
                 }
             }
         }
@@ -188,15 +182,13 @@ namespace NLSpreads
                 if (table.HasColumn(colName))
                 {
                     AnsiConsole.MarkupLine(
-                        $"[yellow]Column '[u]{colName}[/]' already exists in table '[u]{table.Name}[/]'.[/]"
-                    );
+                        $"[yellow]Column '[u]{colName}[/]' already exists in table '[u]{table.Name}[/]'.[/]");
                 }
                 else
                 {
                     table.AddColumn(colName);
                     AnsiConsole.MarkupLine(
-                        $"[green]Added column '[u]{colName}[/]' to table '[u]{table.Name}[/]'.[/]"
-                    );
+                        $"[green]Added column '[u]{colName}[/]' to table '[u]{table.Name}[/]'.[/]");
                 }
             }
         }
@@ -215,15 +207,13 @@ namespace NLSpreads
                 if (!table.HasColumn(colName))
                 {
                     AnsiConsole.MarkupLine(
-                        $"[yellow]Column '[u]{colName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]"
-                    );
+                        $"[yellow]Column '[u]{colName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]");
                 }
                 else
                 {
                     table.DeleteColumn(colName);
                     AnsiConsole.MarkupLine(
-                        $"[green]Deleted column '[u]{colName}[/]' from table '[u]{table.Name}[/]'.[/]"
-                    );
+                        $"[green]Deleted column '[u]{colName}[/]' from table '[u]{table.Name}[/]'.[/]");
                 }
             }
         }
@@ -240,15 +230,34 @@ namespace NLSpreads
             if (!table.HasRow(cmd.RowName))
             {
                 AnsiConsole.MarkupLine(
-                    $"[red]Row '[u]{cmd.RowName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]"
-                );
+                    $"[red]Row '[u]{cmd.RowName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]");
                 return;
             }
 
             table.FillRow(cmd.RowName, cmd.Values);
             AnsiConsole.MarkupLine(
-                $"[green]Filled row '[u]{cmd.RowName}[/]' with values: {string.Join(", ", cmd.Values)}[/]"
-            );
+                $"[green]Filled row '[u]{cmd.RowName}[/]' with values: {string.Join(", ", cmd.Values)}[/]");
+        }
+
+        private static void ExecuteFillColumn(FillColumnCommand cmd, SpreadsheetState state)
+        {
+            Table table = state.GetActiveTable();
+            if (table == null)
+            {
+                AnsiConsole.MarkupLine("[red]No active table. Create a table first.[/]");
+                return;
+            }
+
+            if (!table.HasColumn(cmd.ColumnName))
+            {
+                AnsiConsole.MarkupLine(
+                    $"[red]Column '[u]{cmd.ColumnName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]");
+                return;
+            }
+
+            table.FillColumn(cmd.ColumnName, cmd.Values);
+            AnsiConsole.MarkupLine(
+                $"[green]Filled column '[u]{cmd.ColumnName}[/]' with values: {string.Join(", ", cmd.Values)}[/]");
         }
 
         private static void ExecuteShowTable(ShowTableCommand cmd, SpreadsheetState state)
@@ -263,39 +272,29 @@ namespace NLSpreads
             if (table.Rows.Count == 0)
             {
                 AnsiConsole.MarkupLine(
-                    $"[yellow]Table '[u]{table.Name}[/]' is empty (no rows).[/]"
-                );
+                    $"[yellow]Table '[u]{table.Name}[/]' is empty (no rows).[/]");
                 return;
             }
 
-            // Build a Spectre.Console Table widget
             var ansiTable = new Spectre.Console.Table();
             ansiTable.Title($"[green bold underline]{table.Name}[/]");
 
-            // First column is the Row name
             ansiTable.AddColumn("[green bold][u]Row[/][/]");
-
-            // Add one column header for each column name
             foreach (var colName in table.Columns)
             {
                 ansiTable.AddColumn(colName);
             }
 
-            // Populate each row
             foreach (var kvp in table.Rows)
             {
                 string rowName = kvp.Key;
                 var values = kvp.Value;
-
-                // Ensure the list has exactly as many items as there are columns
                 var cells = new List<string> { rowName };
                 cells.AddRange(values);
-
                 while (cells.Count < table.Columns.Count + 1)
                 {
                     cells.Add(string.Empty);
                 }
-
                 ansiTable.AddRow(cells.ToArray());
             }
 

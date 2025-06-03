@@ -29,6 +29,10 @@ Create and manage simple table data with commands like
 - [ ] Individual cell editing with `set Row1 Column1 "Data"`
 - [ ] More visualization options
 
+## Build
+
+From source run `dotnet run` and it should build.
+
 ## License
 
 This project is licensed under MIT License. See `LICENSE` file.

@@ -7,22 +7,17 @@ namespace NLSpreads
 {
     public static class CommandParser
     {
-        /// <summary>
-        /// Main entry point: tries to parse input as a known command.
-        /// </summary>
         public static Command Parse(string input)
         {
             var tokens = Tokenize(input);
-
             if (tokens == null || tokens.Count == 0)
             {
                 return null;
             }
 
-            // Lowercase all tokens for keyword matching, but keep originals in 'tokens'
             var lowerTokens = tokens.Select(t => t.ToLowerInvariant()).ToList();
 
-            // 0) show table
+            // show table
             if (lowerTokens.Count == 2
                 && lowerTokens[0] == "show"
                 && lowerTokens[1] == "table")
@@ -30,8 +25,7 @@ namespace NLSpreads
                 return new ShowTableCommand();
             }
 
-            // 1) create table named <Name>
-            //    expects exactly 4 tokens: "create", "table", "named", "<Name>"
+            // create table named <Name>
             if (lowerTokens.Count == 4
                 && lowerTokens[0] == "create"
                 && lowerTokens[1] == "table"
@@ -43,7 +37,7 @@ namespace NLSpreads
                 };
             }
 
-            // 2) delete table <Name>
+            // delete table <Name>
             if (lowerTokens.Count == 3
                 && lowerTokens[0] == "delete"
                 && lowerTokens[1] == "table")
@@ -54,7 +48,7 @@ namespace NLSpreads
                 };
             }
 
-            // 3) switch table <Name>
+            // switch table <Name>
             if (lowerTokens.Count == 3
                 && lowerTokens[0] == "switch"
                 && lowerTokens[1] == "table")
@@ -65,7 +59,7 @@ namespace NLSpreads
                 };
             }
 
-            // 4) add rows <Row1> <Row2> ...
+            // add rows <Row1> <Row2> ...
             if (lowerTokens.Count >= 3
                 && lowerTokens[0] == "add"
                 && lowerTokens[1] == "rows")
@@ -77,7 +71,7 @@ namespace NLSpreads
                 };
             }
 
-            // 5) delete rows <Row1> <Row2> ...
+            // delete rows <Row1> <Row2> ...
             if (lowerTokens.Count >= 3
                 && lowerTokens[0] == "delete"
                 && lowerTokens[1] == "rows")
@@ -89,7 +83,7 @@ namespace NLSpreads
                 };
             }
 
-            // 6) add columns <Col1> <Col2> ...
+            // add columns <Col1> <Col2> ...
             if (lowerTokens.Count >= 3
                 && lowerTokens[0] == "add"
                 && lowerTokens[1] == "columns")
@@ -101,7 +95,7 @@ namespace NLSpreads
                 };
             }
 
-            // 7) delete columns <Col1> <Col2> ...
+            // delete columns <Col1> <Col2> ...
             if (lowerTokens.Count >= 3
                 && lowerTokens[0] == "delete"
                 && lowerTokens[1] == "columns")
@@ -113,7 +107,22 @@ namespace NLSpreads
                 };
             }
 
-            // 8) fill <RowName> with <Val1> <Val2> ...
+            // fill column <ColName> with <Val1> <Val2> ...
+            if (lowerTokens.Count >= 5
+                && lowerTokens[0] == "fill"
+                && lowerTokens[1] == "column"
+                && lowerTokens[3] == "with")
+            {
+                string colName = tokens[2];
+                var values = tokens.Skip(4).ToList();
+                return new FillColumnCommand
+                {
+                    ColumnName = colName,
+                    Values = values
+                };
+            }
+
+            // fill <RowName> with <Val1> <Val2> ...
             if (lowerTokens.Count >= 4
                 && lowerTokens[0] == "fill"
                 && lowerTokens[2] == "with")
@@ -127,18 +136,12 @@ namespace NLSpreads
                 };
             }
 
-            // If nothing matched:
             return null;
         }
 
-        /// <summary>
-        /// Splits the input string into tokens, treating quoted text as a single token.
-        /// e.g. create table named "My table" -> ["create","table","named","My table"]
-        /// </summary>
         private static List<string> Tokenize(string input)
         {
-            // Regex: match either "quoted text" OR a sequence of non-space characters
-            var matches = Regex.Matches(input, @"\""([^\""]*)\""|(\S+)");
+            var matches = Regex.Matches(input, @"""([^""]*)""|(\S+)");
             var tokens = new List<string>();
 
             foreach (Match match in matches)
