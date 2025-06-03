@@ -33,6 +33,10 @@ Create and manage simple table data with commands like
 
 From source run `dotnet run` and it should build.
 
+**OR**
+
+You can use the [Releases](https://github.com/Zank613/NLSpreads/releases) to download compiled binaries.
+
 ## License
 
 This project is licensed under MIT License. See `LICENSE` file.
