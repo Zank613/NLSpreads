@@ -11,129 +11,74 @@ namespace NLSpreads
         {
             var tokens = Tokenize(input);
             if (tokens == null || tokens.Count == 0)
-            {
                 return null;
-            }
 
             var lowerTokens = tokens.Select(t => t.ToLowerInvariant()).ToList();
 
             // show table
-            if (lowerTokens.Count == 2
-                && lowerTokens[0] == "show"
-                && lowerTokens[1] == "table")
+            if (lowerTokens.Count == 2 && lowerTokens[0] == "show" && lowerTokens[1] == "table")
             {
                 return new ShowTableCommand();
             }
 
             // create table named <Name>
-            if (lowerTokens.Count == 4
-                && lowerTokens[0] == "create"
-                && lowerTokens[1] == "table"
-                && lowerTokens[2] == "named")
+            if (lowerTokens.Count == 4 && lowerTokens[0] == "create" && lowerTokens[1] == "table" && lowerTokens[2] == "named")
             {
-                return new CreateTableCommand
-                {
-                    TableName = tokens[3]
-                };
+                return new CreateTableCommand { TableName = tokens[3] };
             }
 
             // delete table <Name>
-            if (lowerTokens.Count == 3
-                && lowerTokens[0] == "delete"
-                && lowerTokens[1] == "table")
+            if (lowerTokens.Count == 3 && lowerTokens[0] == "delete" && lowerTokens[1] == "table")
             {
-                return new DeleteTableCommand
-                {
-                    TableName = tokens[2]
-                };
+                return new DeleteTableCommand { TableName = tokens[2] };
             }
 
             // switch table <Name>
-            if (lowerTokens.Count == 3
-                && lowerTokens[0] == "switch"
-                && lowerTokens[1] == "table")
+            if (lowerTokens.Count == 3 && lowerTokens[0] == "switch" && lowerTokens[1] == "table")
             {
-                return new SwitchTableCommand
-                {
-                    TableName = tokens[2]
-                };
+                return new SwitchTableCommand { TableName = tokens[2] };
             }
 
             // add rows <Row1> <Row2> ...
-            if (lowerTokens.Count >= 3
-                && lowerTokens[0] == "add"
-                && lowerTokens[1] == "rows")
+            if (lowerTokens.Count >= 3 && lowerTokens[0] == "add" && lowerTokens[1] == "rows")
             {
-                var rowNames = tokens.Skip(2).ToList();
-                return new AddRowsCommand
-                {
-                    RowNames = rowNames
-                };
+                return new AddRowsCommand { RowNames = tokens.Skip(2).ToList() };
             }
 
             // delete rows <Row1> <Row2> ...
-            if (lowerTokens.Count >= 3
-                && lowerTokens[0] == "delete"
-                && lowerTokens[1] == "rows")
+            if (lowerTokens.Count >= 3 && lowerTokens[0] == "delete" && lowerTokens[1] == "rows")
             {
-                var rowNames = tokens.Skip(2).ToList();
-                return new DeleteRowsCommand
-                {
-                    RowNames = rowNames
-                };
+                return new DeleteRowsCommand { RowNames = tokens.Skip(2).ToList() };
             }
 
             // add columns <Col1> <Col2> ...
-            if (lowerTokens.Count >= 3
-                && lowerTokens[0] == "add"
-                && lowerTokens[1] == "columns")
+            if (lowerTokens.Count >= 3 && lowerTokens[0] == "add" && lowerTokens[1] == "columns")
             {
-                var columnNames = tokens.Skip(2).ToList();
-                return new AddColumnsCommand
-                {
-                    ColumnNames = columnNames
-                };
+                return new AddColumnsCommand { ColumnNames = tokens.Skip(2).ToList() };
             }
 
             // delete columns <Col1> <Col2> ...
-            if (lowerTokens.Count >= 3
-                && lowerTokens[0] == "delete"
-                && lowerTokens[1] == "columns")
+            if (lowerTokens.Count >= 3 && lowerTokens[0] == "delete" && lowerTokens[1] == "columns")
             {
-                var columnNames = tokens.Skip(2).ToList();
-                return new DeleteColumnsCommand
-                {
-                    ColumnNames = columnNames
-                };
+                return new DeleteColumnsCommand { ColumnNames = tokens.Skip(2).ToList() };
             }
 
             // fill column <ColName> with <Val1> <Val2> ...
-            if (lowerTokens.Count >= 5
-                && lowerTokens[0] == "fill"
-                && lowerTokens[1] == "column"
-                && lowerTokens[3] == "with")
+            if (lowerTokens.Count >= 5 && lowerTokens[0] == "fill" && lowerTokens[1] == "column" && lowerTokens[3] == "with")
             {
-                string colName = tokens[2];
-                var values = tokens.Skip(4).ToList();
-                return new FillColumnCommand
-                {
-                    ColumnName = colName,
-                    Values = values
-                };
+                return new FillColumnCommand { ColumnName = tokens[2], Values = tokens.Skip(4).ToList() };
             }
 
             // fill <RowName> with <Val1> <Val2> ...
-            if (lowerTokens.Count >= 4
-                && lowerTokens[0] == "fill"
-                && lowerTokens[2] == "with")
+            if (lowerTokens.Count >= 4 && lowerTokens[0] == "fill" && lowerTokens[2] == "with")
             {
-                string rowName = tokens[1];
-                var values = tokens.Skip(3).ToList();
-                return new FillRowCommand
-                {
-                    RowName = rowName,
-                    Values = values
-                };
+                return new FillRowCommand { RowName = tokens[1], Values = tokens.Skip(3).ToList() };
+            }
+
+            // set <RowName> <ColName> to <Value>
+            if (lowerTokens.Count == 5 && lowerTokens[0] == "set" && lowerTokens[3] == "to")
+            {
+                return new SetCellCommand { RowName = tokens[1], ColumnName = tokens[2], Value = tokens[4] };
             }
 
             return null;
@@ -143,19 +88,13 @@ namespace NLSpreads
         {
             var matches = Regex.Matches(input, @"""([^""]*)""|(\S+)");
             var tokens = new List<string>();
-
             foreach (Match match in matches)
             {
                 if (match.Groups[1].Success)
-                {
                     tokens.Add(match.Groups[1].Value);
-                }
                 else
-                {
                     tokens.Add(match.Groups[2].Value);
-                }
             }
-
             return tokens;
         }
     }

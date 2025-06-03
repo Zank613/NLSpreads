@@ -13,12 +13,15 @@ Create and manage simple table data with commands like
 - ``add rows "Player1" "Player2"``
 - ``fill Player1 with "John" "1200"``
 - ``show table``
+- `set "RowName" "ColumnName" to "Value"`
 
 ## Features
 
 - Natural language style REPL
 - Add/delete rows and columns
 - Switch/delete tables
+- Edit individual cell data with `set`
+- CLI table visualization
 
 ## Roadmap
 
@@ -26,17 +29,21 @@ Create and manage simple table data with commands like
 - [ ] Save and load `.json`
 - [ ] Save and load `.xlsx`
 - [ ] Arithmetic operations on cells
-- [ ] Individual cell editing with `set Row1 Column1 "Data"`
+- [x] Individual cell editing with `set Row1 Column1 "Data"`
 - [ ] More visualization options
 
 ## Build
+
+**.NET 9 required.**
 
 From source run `dotnet run` and it should build.
 
 **OR**
 
+**.NET SDK not required.**
+
 You can use the [Releases](https://github.com/Zank613/NLSpreads/releases) to download compiled binaries.
 
 ## License
 
-This project is licensed under MIT License. See `LICENSE` file.
+This project is licensed under [MIT License](./LICENSE).

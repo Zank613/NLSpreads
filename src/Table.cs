@@ -27,9 +27,7 @@ namespace NLSpreads
             {
                 Columns.Add(columnName);
                 foreach (var rowName in Rows.Keys.ToList())
-                {
                     Rows[rowName].Add(string.Empty);
-                }
             }
         }
 
@@ -43,9 +41,7 @@ namespace NLSpreads
                 {
                     var values = Rows[rowName];
                     if (idx < values.Count)
-                    {
                         values.RemoveAt(idx);
-                    }
                 }
             }
         }
@@ -58,9 +54,7 @@ namespace NLSpreads
         public void AddRow(string rowName)
         {
             if (!Rows.ContainsKey(rowName))
-            {
                 Rows[rowName] = Columns.Select(c => string.Empty).ToList();
-            }
         }
 
         public void FillRow(string rowName, List<string> values)
@@ -70,14 +64,7 @@ namespace NLSpreads
                 var newCells = new List<string>();
                 for (int i = 0; i < Columns.Count; i++)
                 {
-                    if (i < values.Count)
-                    {
-                        newCells.Add(values[i]);
-                    }
-                    else
-                    {
-                        newCells.Add(string.Empty);
-                    }
+                    newCells.Add(i < values.Count ? values[i] : string.Empty);
                 }
                 Rows[rowName] = newCells;
             }
@@ -86,9 +73,7 @@ namespace NLSpreads
         public void DeleteRow(string rowName)
         {
             if (Rows.ContainsKey(rowName))
-            {
                 Rows.Remove(rowName);
-            }
         }
 
         public void FillColumn(string columnName, List<string> values)
@@ -102,9 +87,7 @@ namespace NLSpreads
                 var rowValues = Rows[rowName];
                 string val = i < values.Count ? values[i] : string.Empty;
                 if (idx < rowValues.Count)
-                {
                     rowValues[idx] = val;
-                }
                 else
                 {
                     while (rowValues.Count < Columns.Count)
@@ -112,6 +95,17 @@ namespace NLSpreads
                     rowValues[idx] = val;
                 }
             }
+        }
+
+        public void SetCell(string rowName, string columnName, string value)
+        {
+            int colIdx = Columns.IndexOf(columnName);
+            if (colIdx < 0) return;
+            if (!Rows.ContainsKey(rowName)) return;
+            var rowValues = Rows[rowName];
+            while (rowValues.Count < Columns.Count)
+                rowValues.Add(string.Empty);
+            rowValues[colIdx] = value;
         }
     }
 }

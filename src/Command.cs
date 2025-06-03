@@ -2,7 +2,6 @@
 
 namespace NLSpreads
 {
-    // base class for any parsed command
     public abstract class Command { }
 
     public class CreateTableCommand : Command
@@ -25,6 +24,13 @@ namespace NLSpreads
     {
         public string ColumnName { get; set; }
         public List<string> Values { get; set; }
+    }
+
+    public class SetCellCommand : Command
+    {
+        public string RowName { get; set; }
+        public string ColumnName { get; set; }
+        public string Value { get; set; }
     }
 
     public class ShowTableCommand : Command { }
