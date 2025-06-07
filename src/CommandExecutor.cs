@@ -1,26 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Spectre.Console;
 
 namespace NLSpreads
 {
     public static class CommandExecutor
     {
+        // Help entries for 'help' command
+        static readonly Dictionary<string, (string Syntax, string Description)> HelpEntries = new()
+        {
+            ["show table"]     = ("show table", "Displays the active table."),
+            ["create table"]   = ("create table named \"Name\"", "Creates and switches to a new table."),
+            ["delete table"]   = ("delete table \"Name\"", "Deletes the named table."),
+            ["switch table"]   = ("switch table \"Name\"", "Switches the active table."),
+            ["add rows"]       = ("add rows \"R1\" \"R2\"", "Adds rows to the active table."),
+            ["delete rows"]    = ("delete rows \"R1\" \"R2\"", "Deletes rows from the active table."),
+            ["add columns"]    = ("add columns \"C1\" \"C2\"", "Adds columns to the active table."),
+            ["delete columns"] = ("delete columns \"C1\" \"C2\"", "Deletes columns from the active table."),
+            ["fill row"]       = ("fill \"Row\" with \"v1\" \"v2\"", "Fills a row with values."),
+            ["fill column"]    = ("fill column \"Col\" with \"v1\" \"v2\"", "Fills a column with values."),
+            ["set cell"]       = ("set \"Row\" \"Col\" to \"Value\"", "Sets a single cell value."),
+            ["export table"]   = ("export table to \"file.csv\"", "Exports the active table to CSV."),
+            ["import table"]   = ("import table from \"file.csv\"", "Imports a CSV as a new table."),
+            ["rename row"]     = ("rename row \"Old\" to \"New\"", "Renames a row."),
+            ["rename column"]  = ("rename column \"Old\" to \"New\"", "Renames a column."),
+            ["copy table"]     = ("copy table \"Src\" to \"Dst\"", "Copies a table."),
+            ["help"]           = ("help [\"topic\"]", "Shows usage information.")
+        };
+
         public static void Execute(Command command, SpreadsheetState state)
         {
             switch (command)
             {
-                case ShowTableCommand stc:
-                    ExecuteShowTable(stc, state);
+                case HelpCommand hc:
+                    ExecuteHelp(hc);
+                    break;
+                case ShowTableCommand:
+                    ExecuteShow(state);
                     break;
                 case CreateTableCommand ctc:
-                    ExecuteCreateTable(ctc, state);
+                    ExecuteCreate(ctc, state);
                     break;
                 case DeleteTableCommand dtc:
                     ExecuteDeleteTable(dtc, state);
                     break;
-                case SwitchTableCommand stc2:
-                    ExecuteSwitchTable(stc2, state);
+                case SwitchTableCommand stc:
+                    ExecuteSwitch(stc, state);
                     break;
                 case AddRowsCommand arc:
                     ExecuteAddRows(arc, state);
@@ -43,236 +70,299 @@ namespace NLSpreads
                 case SetCellCommand scc:
                     ExecuteSetCell(scc, state);
                     break;
+                case ExportTableCommand etc:
+                    ExecuteExport(etc, state);
+                    break;
+                case ImportTableCommand itc:
+                    ExecuteImport(itc, state);
+                    break;
+                case RenameRowCommand rrc:
+                    ExecuteRenameRow(rrc, state);
+                    break;
+                case RenameColumnCommand rcc:
+                    ExecuteRenameColumn(rcc, state);
+                    break;
+                case CopyTableCommand ctc2:
+                    ExecuteCopy(ctc2, state);
+                    break;
                 default:
-                    AnsiConsole.MarkupLine("[red]Unknown command type[/]");
+                    AnsiConsole.MarkupLine("[red]Unhandled command type[/]");
                     break;
             }
         }
 
-        private static void ExecuteCreateTable(CreateTableCommand cmd, SpreadsheetState state)
+        static void ExecuteHelp(HelpCommand cmd)
         {
-            if (string.IsNullOrEmpty(cmd.TableName))
+            if (string.IsNullOrEmpty(cmd.Topic))
             {
-                AnsiConsole.MarkupLine("[red]Table name cannot be empty.[/]");
-                return;
-            }
-            if (state.HasTable(cmd.TableName))
-            {
-                state.SwitchTable(cmd.TableName);
-                AnsiConsole.MarkupLine($"[yellow]Table '[u]{cmd.TableName}[/]' already exists. Switched to it.[/]");
+                AnsiConsole.MarkupLine("[underline bold]Commands:[/]");
+                foreach (var kv in HelpEntries)
+                    AnsiConsole.MarkupLine($"[green]{kv.Key}[/] - {kv.Value.Description}");
             }
             else
             {
-                state.CreateTable(cmd.TableName);
-                AnsiConsole.MarkupLine($"[green]Created table '[u]{cmd.TableName}[/]' and set as active.[/]");
-            }
-        }
-
-        private static void ExecuteDeleteTable(DeleteTableCommand cmd, SpreadsheetState state)
-        {
-            if (string.IsNullOrEmpty(cmd.TableName))
-            {
-                AnsiConsole.MarkupLine("[red]Table name cannot be empty.[/]");
-                return;
-            }
-            if (!state.HasTable(cmd.TableName))
-            {
-                AnsiConsole.MarkupLine($"[red]Table '[u]{cmd.TableName}[/]' does not exist.[/]");
-                return;
-            }
-            state.DeleteTable(cmd.TableName);
-            AnsiConsole.MarkupLine($"[green]Deleted table '[u]{cmd.TableName}[/]'.[/]");
-        }
-
-        private static void ExecuteSwitchTable(SwitchTableCommand cmd, SpreadsheetState state)
-        {
-            if (string.IsNullOrEmpty(cmd.TableName))
-            {
-                AnsiConsole.MarkupLine("[red]Table name cannot be empty.[/]");
-                return;
-            }
-            if (!state.HasTable(cmd.TableName))
-            {
-                AnsiConsole.MarkupLine($"[red]Table '[u]{cmd.TableName}[/]' does not exist.[/]");
-                return;
-            }
-            state.SwitchTable(cmd.TableName);
-            AnsiConsole.MarkupLine($"[green]Switched to table '[u]{cmd.TableName}[/]'.[/]");
-        }
-
-        private static void ExecuteAddRows(AddRowsCommand cmd, SpreadsheetState state)
-        {
-            Table table = state.GetActiveTable();
-            if (table == null)
-            {
-                AnsiConsole.MarkupLine("[red]No active table. Create a table first.[/]");
-                return;
-            }
-            foreach (string rowName in cmd.RowNames)
-            {
-                if (table.HasRow(rowName))
-                {
-                    AnsiConsole.MarkupLine($"[yellow]Row '[u]{rowName}[/]' already exists in table '[u]{table.Name}[/]'.[/]");
-                }
+                var key = HelpEntries.Keys.FirstOrDefault(k => k.Contains(cmd.Topic.ToLowerInvariant()));
+                if (key == null)
+                    AnsiConsole.MarkupLine($"[red]No help for '{cmd.Topic}'[/]");
                 else
                 {
-                    table.AddRow(rowName);
-                    AnsiConsole.MarkupLine($"[green]Added row '[u]{rowName}[/]' to table '[u]{table.Name}[/]'.[/]");
+                    var entry = HelpEntries[key];
+                    AnsiConsole.MarkupLine($"[yellow]Usage:[/] {entry.Syntax}\n[yellow]Description:[/] {entry.Description}");
                 }
             }
         }
 
-        private static void ExecuteDeleteRows(DeleteRowsCommand cmd, SpreadsheetState state)
-        {
-            Table table = state.GetActiveTable();
-            if (table == null)
-            {
-                AnsiConsole.MarkupLine("[red]No active table. Create a table first.[/]");
-                return;
-            }
-            foreach (string rowName in cmd.RowNames)
-            {
-                if (!table.HasRow(rowName))
-                {
-                    AnsiConsole.MarkupLine($"[yellow]Row '[u]{rowName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]");
-                }
-                else
-                {
-                    table.DeleteRow(rowName);
-                    AnsiConsole.MarkupLine($"[green]Deleted row '[u]{rowName}[/]' from table '[u]{table.Name}[/]'.[/]");
-                }
-            }
-        }
-
-        private static void ExecuteAddColumns(AddColumnsCommand cmd, SpreadsheetState state)
-        {
-            Table table = state.GetActiveTable();
-            if (table == null)
-            {
-                AnsiConsole.MarkupLine("[red]No active table. Create a table first.[/]");
-                return;
-            }
-            foreach (string colName in cmd.ColumnNames)
-            {
-                if (table.HasColumn(colName))
-                {
-                    AnsiConsole.MarkupLine($"[yellow]Column '[u]{colName}[/]' already exists in table '[u]{table.Name}[/]'.[/]");
-                }
-                else
-                {
-                    table.AddColumn(colName);
-                    AnsiConsole.MarkupLine($"[green]Added column '[u]{colName}[/]' to table '[u]{table.Name}[/]'.[/]");
-                }
-            }
-        }
-
-        private static void ExecuteDeleteColumns(DeleteColumnsCommand cmd, SpreadsheetState state)
-        {
-            Table table = state.GetActiveTable();
-            if (table == null)
-            {
-                AnsiConsole.MarkupLine("[red]No active table. Create a table first.[/]");
-                return;
-            }
-            foreach (string colName in cmd.ColumnNames)
-            {
-                if (!table.HasColumn(colName))
-                {
-                    AnsiConsole.MarkupLine($"[yellow]Column '[u]{colName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]");
-                }
-                else
-                {
-                    table.DeleteColumn(colName);
-                    AnsiConsole.MarkupLine($"[green]Deleted column '[u]{colName}[/]' from table '[u]{table.Name}[/]'.[/]");
-                }
-            }
-        }
-
-        private static void ExecuteFillRow(FillRowCommand cmd, SpreadsheetState state)
-        {
-            Table table = state.GetActiveTable();
-            if (table == null)
-            {
-                AnsiConsole.MarkupLine("[red]No active table. Create a table first.[/]");
-                return;
-            }
-            if (!table.HasRow(cmd.RowName))
-            {
-                AnsiConsole.MarkupLine($"[red]Row '[u]{cmd.RowName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]");
-                return;
-            }
-            table.FillRow(cmd.RowName, cmd.Values);
-            AnsiConsole.MarkupLine($"[green]Filled row '[u]{cmd.RowName}[/]' with values: {string.Join(", ", cmd.Values)}[/]");
-        }
-
-        private static void ExecuteFillColumn(FillColumnCommand cmd, SpreadsheetState state)
-        {
-            Table table = state.GetActiveTable();
-            if (table == null)
-            {
-                AnsiConsole.MarkupLine("[red]No active table. Create a table first.[/]");
-                return;
-            }
-            if (!table.HasColumn(cmd.ColumnName))
-            {
-                AnsiConsole.MarkupLine($"[red]Column '[u]{cmd.ColumnName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]");
-                return;
-            }
-            table.FillColumn(cmd.ColumnName, cmd.Values);
-            AnsiConsole.MarkupLine($"[green]Filled column '[u]{cmd.ColumnName}[/]' with values: {string.Join(", ", cmd.Values)}[/]");
-        }
-
-        private static void ExecuteSetCell(SetCellCommand cmd, SpreadsheetState state)
-        {
-            Table table = state.GetActiveTable();
-            if (table == null)
-            {
-                AnsiConsole.MarkupLine("[red]No active table. Create a table first.[/]");
-                return;
-            }
-            if (!table.HasRow(cmd.RowName))
-            {
-                AnsiConsole.MarkupLine($"[red]Row '[u]{cmd.RowName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]");
-                return;
-            }
-            if (!table.HasColumn(cmd.ColumnName))
-            {
-                AnsiConsole.MarkupLine($"[red]Column '[u]{cmd.ColumnName}[/]' does not exist in table '[u]{table.Name}[/]'.[/]");
-                return;
-            }
-            table.SetCell(cmd.RowName, cmd.ColumnName, cmd.Value);
-            AnsiConsole.MarkupLine($"[green]Set cell '[u]{cmd.RowName}[/].[u]{cmd.ColumnName}[/]' to '{cmd.Value}'[/]");
-        }
-
-        private static void ExecuteShowTable(ShowTableCommand cmd, SpreadsheetState state)
+        static void ExecuteShow(SpreadsheetState state)
         {
             var table = state.GetActiveTable();
             if (table == null)
             {
-                AnsiConsole.MarkupLine("[red]No active table to show. Create one first.[/]");
+                AnsiConsole.MarkupLine("[red]No active table.[/]");
                 return;
             }
             if (table.Rows.Count == 0)
             {
-                AnsiConsole.MarkupLine($"[yellow]Table '[u]{table.Name}[/]' is empty (no rows).[/]");
+                AnsiConsole.MarkupLine($"[yellow]{table.Name} is empty.[/]");
                 return;
             }
-            var ansiTable = new Spectre.Console.Table();
-            ansiTable.Title($"[green bold underline]{table.Name}[/]");
-            ansiTable.AddColumn("[green bold][u]Row[/][/]");
-            foreach (var colName in table.Columns)
-                ansiTable.AddColumn(colName);
-            foreach (var kvp in table.Rows)
+            var consoleTable = new Spectre.Console.Table();
+            consoleTable.Title($"[bold underline]{table.Name}[/]");
+            consoleTable.AddColumn("Row");
+            foreach (var col in table.Columns)
+                consoleTable.AddColumn(col);
+            foreach (var kv in table.Rows)
             {
-                string rowName = kvp.Key;
-                var values = kvp.Value;
-                var cells = new List<string> { rowName };
-                cells.AddRange(values);
-                while (cells.Count < table.Columns.Count + 1)
-                    cells.Add(string.Empty);
-                ansiTable.AddRow(cells.ToArray());
+                var row = new List<string> { kv.Key };
+                row.AddRange(kv.Value);
+                consoleTable.AddRow(row.ToArray());
             }
-            AnsiConsole.Write(ansiTable);
+            AnsiConsole.Write(consoleTable);
+        }
+
+        static void ExecuteCreate(CreateTableCommand cmd, SpreadsheetState st)
+        {
+            if (string.IsNullOrEmpty(cmd.TableName))
+                AnsiConsole.MarkupLine("[red]Table name required.[/]");
+            else if (st.HasTable(cmd.TableName))
+            {
+                st.SwitchTable(cmd.TableName);
+                AnsiConsole.MarkupLine($"[yellow]Switched to '{cmd.TableName}'[/]");
+            }
+            else
+            {
+                st.CreateTable(cmd.TableName);
+                AnsiConsole.MarkupLine($"[green]Created '{cmd.TableName}'[/]");
+            }
+        }
+
+        static void ExecuteDeleteTable(DeleteTableCommand cmd, SpreadsheetState st)
+        {
+            if (st.HasTable(cmd.TableName))
+            {
+                st.DeleteTable(cmd.TableName);
+                AnsiConsole.MarkupLine($"[green]Deleted '{cmd.TableName}'[/]");
+            }
+            else
+                AnsiConsole.MarkupLine($"[red]No table '{cmd.TableName}'[/]");
+        }
+
+        static void ExecuteSwitch(SwitchTableCommand cmd, SpreadsheetState st)
+        {
+            if (st.HasTable(cmd.TableName))
+            {
+                st.SwitchTable(cmd.TableName);
+                AnsiConsole.MarkupLine($"[green]Active='{cmd.TableName}'[/]");
+            }
+            else
+                AnsiConsole.MarkupLine($"[red]No table '{cmd.TableName}'[/]");
+        }
+
+        static void ExecuteAddRows(AddRowsCommand cmd, SpreadsheetState st)
+        {
+            var t = st.GetActiveTable();
+            if (t == null) { AnsiConsole.MarkupLine("[red]No active table.[/]"); return; }
+            foreach (var r in cmd.RowNames)
+            {
+                if (t.HasRow(r))
+                    AnsiConsole.MarkupLine($"[yellow]Row '{r}' exists[/]");
+                else
+                {
+                    t.AddRow(r);
+                    AnsiConsole.MarkupLine($"[green]Added row '{r}'[/]");
+                }
+            }
+        }
+
+        static void ExecuteDeleteRows(DeleteRowsCommand cmd, SpreadsheetState st)
+        {
+            var t = st.GetActiveTable();
+            if (t == null) { AnsiConsole.MarkupLine("[red]No active table.[/]"); return; }
+            foreach (var r in cmd.RowNames)
+            {
+                if (t.HasRow(r))
+                {
+                    t.DeleteRow(r);
+                    AnsiConsole.MarkupLine($"[green]Deleted row '{r}'[/]");
+                }
+                else
+                    AnsiConsole.MarkupLine($"[yellow]No row '{r}'[/]");
+            }
+        }
+
+        static void ExecuteAddColumns(AddColumnsCommand cmd, SpreadsheetState st)
+        {
+            var t = st.GetActiveTable();
+            if (t == null) { AnsiConsole.MarkupLine("[red]No active table.[/]"); return; }
+            foreach (var c in cmd.ColumnNames)
+            {
+                if (t.HasColumn(c))
+                    AnsiConsole.MarkupLine($"[yellow]Column '{c}' exists[/]");
+                else
+                {
+                    t.AddColumn(c);
+                    AnsiConsole.MarkupLine($"[green]Added column '{c}'[/]");
+                }
+            }
+        }
+
+        static void ExecuteDeleteColumns(DeleteColumnsCommand cmd, SpreadsheetState st)
+        {
+            var t = st.GetActiveTable();
+            if (t == null) { AnsiConsole.MarkupLine("[red]No active table.[/]"); return; }
+            foreach (var c in cmd.ColumnNames)
+            {
+                if (t.HasColumn(c))
+                {
+                    t.DeleteColumn(c);
+                    AnsiConsole.MarkupLine($"[green]Deleted column '{c}'[/]");
+                }
+                else
+                    AnsiConsole.MarkupLine($"[yellow]No column '{c}'[/]");
+            }
+        }
+
+        static void ExecuteFillRow(FillRowCommand cmd, SpreadsheetState st)
+        {
+            var t = st.GetActiveTable();
+            if (t == null) { AnsiConsole.MarkupLine("[red]No active table.[/]"); return; }
+            if (!t.HasRow(cmd.RowName)) { AnsiConsole.MarkupLine($"[red]No row '{cmd.RowName}'[/]"); return; }
+            t.FillRow(cmd.RowName, cmd.Values);
+            AnsiConsole.MarkupLine($"[green]Filled row '{cmd.RowName}'[/]");
+        }
+
+        static void ExecuteFillColumn(FillColumnCommand cmd, SpreadsheetState st)
+        {
+            var t = st.GetActiveTable();
+            if (t == null) { AnsiConsole.MarkupLine("[red]No active table.[/]"); return; }
+            if (!t.HasColumn(cmd.ColumnName)) { AnsiConsole.MarkupLine($"[red]No column '{cmd.ColumnName}'[/]"); return; }
+            t.FillColumn(cmd.ColumnName, cmd.Values);
+            AnsiConsole.MarkupLine($"[green]Filled column '{cmd.ColumnName}'[/]");
+        }
+
+        static void ExecuteSetCell(SetCellCommand cmd, SpreadsheetState st)
+        {
+            var t = st.GetActiveTable();
+            if (t == null) { AnsiConsole.MarkupLine("[red]No active table.[/]"); return; }
+            if (!t.HasRow(cmd.RowName)) { AnsiConsole.MarkupLine($"[red]No row '{cmd.RowName}'[/]"); return; }
+            if (!t.HasColumn(cmd.ColumnName)) { AnsiConsole.MarkupLine($"[red]No column '{cmd.ColumnName}'[/]"); return; }
+            t.SetCell(cmd.RowName, cmd.ColumnName, cmd.Value);
+            AnsiConsole.MarkupLine($"[green]Set {cmd.RowName}.{cmd.ColumnName} to '{cmd.Value}'[/]");
+        }
+
+        static void ExecuteExport(ExportTableCommand cmd, SpreadsheetState st)
+        {
+            var t = st.GetActiveTable();
+            if (t == null) { AnsiConsole.MarkupLine("[red]No active table.[/]"); return; }
+            try
+            {
+                using var w = new StreamWriter(cmd.FileName);
+                string Quote(string s) =>
+                    s.Contains(',') || s.Contains('"')
+                        ? "\"" + s.Replace("\"", "\"\"") + "\""
+                        : s;
+                w.WriteLine(string.Join(",", new[] { Quote("Row") }.Concat(t.Columns.Select(Quote))));
+                foreach (var kv in t.Rows)
+                    w.WriteLine(string.Join(",", new[] { Quote(kv.Key) }.Concat(kv.Value.Select(Quote))));
+                AnsiConsole.MarkupLine($"[green]Exported to '{cmd.FileName}'[/]");
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[red]Export failed: {ex.Message}[/]");
+            }
+        }
+
+        static void ExecuteImport(ImportTableCommand cmd, SpreadsheetState st)
+        {
+            try
+            {
+                var lines = File.ReadAllLines(cmd.FileName);
+                if (lines.Length < 2) throw new Exception("CSV must have header and at least one row.");
+                var headers = ParseCsvLine(lines[0]);
+                var name = Path.GetFileNameWithoutExtension(cmd.FileName);
+                if (st.HasTable(name)) st.DeleteTable(name);
+                st.CreateTable(name);
+                var tbl = st.GetActiveTable();
+                foreach (var col in headers.Skip(1)) tbl.AddColumn(col);
+                foreach (var ln in lines.Skip(1))
+                {
+                    var fields = ParseCsvLine(ln);
+                    tbl.AddRow(fields[0]);
+                    tbl.FillRow(fields[0], fields.Skip(1).ToList());
+                }
+                AnsiConsole.MarkupLine($"[green]Imported '{name}'[/]");
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[red]Import failed: {ex.Message}[/]");
+            }
+        }
+
+        static string[] ParseCsvLine(string line)
+            => line.Split(',').Select(f => f.Trim(' ', '"')).ToArray();
+
+        static void ExecuteRenameRow(RenameRowCommand cmd, SpreadsheetState st)
+        {
+            var tbl = st.GetActiveTable();
+            if (tbl == null) { AnsiConsole.MarkupLine("[red]No active table.[/]" ); return; }
+            if (!tbl.HasRow(cmd.OldName))
+                AnsiConsole.MarkupLine($"[red]No row '{cmd.OldName}'[/]");
+            else
+            {
+                var vals = tbl.Rows[cmd.OldName];
+                tbl.Rows.Remove(cmd.OldName);
+                tbl.Rows[cmd.NewName] = vals;
+                AnsiConsole.MarkupLine($"[green]Renamed row '{cmd.OldName}' to '{cmd.NewName}'[/]");
+            }
+        }
+
+        static void ExecuteRenameColumn(RenameColumnCommand cmd, SpreadsheetState st)
+        {
+            var tbl = st.GetActiveTable();
+            if (tbl == null) { AnsiConsole.MarkupLine("[red]No active table.[/]" ); return; }
+            var idx = tbl.Columns.IndexOf(cmd.OldName);
+            if (idx < 0)
+                AnsiConsole.MarkupLine($"[red]No column '{cmd.OldName}'[/]");
+            else
+            {
+                tbl.Columns[idx] = cmd.NewName;
+                AnsiConsole.MarkupLine($"[green]Renamed column '{cmd.OldName}' to '{cmd.NewName}'[/]");
+            }
+        }
+
+        static void ExecuteCopy(CopyTableCommand cmd, SpreadsheetState st)
+        {
+            if (!st.HasTable(cmd.Source))
+                AnsiConsole.MarkupLine($"[red]No table '{cmd.Source}'[/]");
+            else
+            {
+                var src = st.Tables[cmd.Source];
+                var clone = new Table(cmd.Destination);
+                foreach (var col in src.Columns) clone.AddColumn(col);
+                foreach (var kv in src.Rows) { clone.AddRow(kv.Key); clone.FillRow(kv.Key, new List<string>(kv.Value)); }
+                st.Tables[cmd.Destination] = clone;
+                st.SwitchTable(cmd.Destination);
+                AnsiConsole.MarkupLine($"[green]Copied '{cmd.Source}' to '{cmd.Destination}'[/]");
+            }
         }
     }
 }

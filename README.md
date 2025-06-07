@@ -22,10 +22,13 @@ Create and manage simple table data with commands like
 - Switch/delete tables
 - Edit individual cell data with `set`
 - CLI table visualization
+- Import from and export to `.csv`
+- Clone tables
+- Rename columns and rows
 
 ## Roadmap
 
-- [ ] Save and load `.csv`
+- [x] Save and load `.csv`
 - [ ] Save and load `.json`
 - [ ] Save and load `.xlsx`
 - [ ] Arithmetic operations on cells
