@@ -31,7 +31,7 @@ Create and manage simple table data with commands like
 - [x] Save and load `.csv`
 - [ ] Save and load `.json`
 - [ ] Save and load `.xlsx`
-- [ ] Arithmetic operations on cells
+- [x] Arithmetic operations on cells
 - [x] Individual cell editing with `set Row1 Column1 "Data"`
 - [ ] More visualization options
 

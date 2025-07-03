@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Spectre.Console;
@@ -265,8 +266,28 @@ namespace NLSpreads
             if (t == null) { AnsiConsole.MarkupLine("[red]No active table.[/]"); return; }
             if (!t.HasRow(cmd.RowName)) { AnsiConsole.MarkupLine($"[red]No row '{cmd.RowName}'[/]"); return; }
             if (!t.HasColumn(cmd.ColumnName)) { AnsiConsole.MarkupLine($"[red]No column '{cmd.ColumnName}'[/]"); return; }
-            t.SetCell(cmd.RowName, cmd.ColumnName, cmd.Value);
-            AnsiConsole.MarkupLine($"[green]Set {cmd.RowName}.{cmd.ColumnName} to '{cmd.Value}'[/]");
+
+            // formula detection
+            if (cmd.Value.StartsWith("="))
+            {
+                try
+                {
+                    // strip leading '=' and evaluate
+                    var expr = cmd.Value.Substring(1);
+                    var result = ExpressionEvaluator.Evaluate(expr, st);
+                    t.SetCell(cmd.RowName, cmd.ColumnName, result.ToString(CultureInfo.InvariantCulture));
+                    AnsiConsole.MarkupLine($"[green]Computed {cmd.RowName}.{cmd.ColumnName} = {result}[/]");
+                }
+                catch (Exception ex)
+                {
+                    AnsiConsole.MarkupLine($"[red]Error evaluating formula: {ex.Message}[/]");
+                }
+            }
+            else
+            {
+                t.SetCell(cmd.RowName, cmd.ColumnName, cmd.Value);
+                AnsiConsole.MarkupLine($"[green]Set {cmd.RowName}.{cmd.ColumnName} to '{cmd.Value}'[/]");
+            }
         }
 
         static void ExecuteExport(ExportTableCommand cmd, SpreadsheetState st)
