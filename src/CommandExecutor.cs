@@ -22,12 +22,14 @@ namespace NLSpreads
             ["delete columns"] = ("delete columns \"C1\" \"C2\"", "Deletes columns from the active table."),
             ["fill row"]       = ("fill \"Row\" with \"v1\" \"v2\"", "Fills a row with values."),
             ["fill column"]    = ("fill column \"Col\" with \"v1\" \"v2\"", "Fills a column with values."),
-            ["set cell"]       = ("set \"Row\" \"Col\" to \"Value\"", "Sets a single cell value."),
+            ["set cell"]       = ("set \"Row\" \"Col\" to \"Value\"", "Sets a single cell value or formula (prefix '=' for expressions)."),
             ["export table"]   = ("export table to \"file.csv\"", "Exports the active table to CSV."),
             ["import table"]   = ("import table from \"file.csv\"", "Imports a CSV as a new table."),
             ["rename row"]     = ("rename row \"Old\" to \"New\"", "Renames a row."),
             ["rename column"]  = ("rename column \"Old\" to \"New\"", "Renames a column."),
             ["copy table"]     = ("copy table \"Src\" to \"Dst\"", "Copies a table."),
+            ["const"]          = ("const \"Name\" = Value", "Defines a named constant for use in expressions."),
+            ["expressions"]    = ("= <expression>", "Use arithmetic, cell refs, math functions (sin, cos, sqrt, log, exp, abs, floor, ceil), and constants (PI, E, custom via const)."),
             ["help"]           = ("help [\"topic\"]", "Shows usage information.")
         };
 
